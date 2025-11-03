@@ -1,0 +1,58 @@
+{
+  "name": "kcode.kcode-ai",
+  "displayName": "KCode AI",
+  "description": "Composer-like AI interface for KCode with Ollama-powered agents",
+  "version": "0.1.0",
+  "publisher": "kcode",
+  "engines": {
+    "vscode": "^1.86.0"
+  },
+  "main": "dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "kcode-ai",
+          "title": "KCode AI",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "kcode-ai": [
+        {
+          "id": "kcodeAiView",
+          "name": "Composer"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "kcode-ai.open",
+        "title": "Open KCode AI Composer"
+      },
+      {
+        "command": "kcode-ai.generateCommitMessage",
+        "title": "KCode AI: Generate Commit Message"
+      },
+      {
+        "command": "kcode-ai.reviewDiff",
+        "title": "KCode AI: Review Current Diff"
+      }
+    ]
+  },
+  "activationEvents": [
+    "onCommand:kcode-ai.open",
+    "onCommand:kcode-ai.generateCommitMessage",
+    "onCommand:kcode-ai.reviewDiff",
+    "onView:kcodeAiView",
+    "onStartupFinished"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && webpack --mode production",
+    "dev": "tsc -w -p tsconfig.json"
+  },
+  "dependencies": {
+    "@vscode/webview-ui-toolkit": "^2.4.0"
+  }
+}

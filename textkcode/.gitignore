@@ -1,0 +1,11 @@
+node_modules/
+dist/
+out/
+*.log
+.DS_Store
+/.vscode-test
+.kcode/
+.ollama/
+extensions/*/media/tailwind.css
+resources/build
+coverage/

@@ -1,8 +1,8 @@
-import { WebContainer } from '@webcontainer/api';
-import fs from 'fs/promises';
-import path from 'path';
+const { WebContainer } = require('@webcontainer/api');
+const fs = require('fs/promises');
+const path = require('path');
 
-let containerPromise: Promise<WebContainer> | null = null;
+let containerPromise = null;
 
 async function bootContainer() {
   if (!containerPromise) {
@@ -11,13 +11,7 @@ async function bootContainer() {
   return containerPromise;
 }
 
-export interface PreviewOptions {
-  projectPath: string;
-  entry: string;
-  framework?: 'react' | 'vue' | 'node' | 'next';
-}
-
-export async function startPreview({ projectPath, entry, framework = 'react' }: PreviewOptions) {
+async function startPreview({ projectPath, entry, framework = 'react' }) {
   const container = await bootContainer();
   const files = await collectProjectFiles(projectPath);
   await container.mount(files);
@@ -33,10 +27,10 @@ export async function startPreview({ projectPath, entry, framework = 'react' }: 
   return container;
 }
 
-async function collectProjectFiles(projectPath: string) {
-  const files: Record<string, { file: { contents: string } }> = {};
+async function collectProjectFiles(projectPath) {
+  const files = {};
 
-  async function walk(dir: string) {
+  async function walk(dir) {
     const entries = await fs.readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
@@ -55,8 +49,13 @@ async function collectProjectFiles(projectPath: string) {
   return files;
 }
 
-export async function stopPreview() {
+async function stopPreview() {
   const container = await bootContainer();
   await container.teardown();
   containerPromise = null;
 }
+
+module.exports = {
+  startPreview,
+  stopPreview
+};

@@ -38,8 +38,8 @@
     "onView:kcodeAiView"
   ],
   "scripts": {
-    "build": "webpack --mode production",
-    "dev": "webpack --watch"
+    "build": "tsc -p tsconfig.json && webpack --mode production",
+    "dev": "tsc -w -p tsconfig.json"
   },
   "dependencies": {
     "@vscode/webview-ui-toolkit": "^2.4.0"

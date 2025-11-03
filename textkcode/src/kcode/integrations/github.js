@@ -1,12 +1,12 @@
-import { streamCompletion } from '../ai/parallel_sessions';
-import simpleGit from 'simple-git';
+const simpleGit = require('simple-git');
+const { streamCompletion } = require('../ai/parallel_sessions');
 
-export async function generateCommitMessage(repoPath: string) {
+async function generateCommitMessage(repoPath) {
   const git = simpleGit(repoPath);
   const status = await git.status();
   const diff = await git.diff(['--cached']);
 
-  const chunks: string[] = [];
+  const chunks = [];
   await streamCompletion({
     model: 'llama3',
     prompt: `You are to write a concise conventional commit message summarizing the following staged changes:
@@ -22,10 +22,10 @@ Return ONLY the commit subject line followed by an optional blank line and body.
   return chunks.join('').trim();
 }
 
-export async function reviewDiff(repoPath: string) {
+async function reviewDiff(repoPath) {
   const git = simpleGit(repoPath);
   const diff = await git.diff();
-  const chunks: string[] = [];
+  const chunks = [];
 
   await streamCompletion({
     model: 'codellama',
@@ -38,3 +38,8 @@ ${diff}`,
 
   return chunks.join('');
 }
+
+module.exports = {
+  generateCommitMessage,
+  reviewDiff
+};

@@ -30,12 +30,23 @@
       {
         "command": "kcode-ai.open",
         "title": "Open KCode AI Composer"
+      },
+      {
+        "command": "kcode-ai.generateCommitMessage",
+        "title": "KCode AI: Generate Commit Message"
+      },
+      {
+        "command": "kcode-ai.reviewDiff",
+        "title": "KCode AI: Review Current Diff"
       }
     ]
   },
   "activationEvents": [
     "onCommand:kcode-ai.open",
-    "onView:kcodeAiView"
+    "onCommand:kcode-ai.generateCommitMessage",
+    "onCommand:kcode-ai.reviewDiff",
+    "onView:kcodeAiView",
+    "onStartupFinished"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && webpack --mode production",

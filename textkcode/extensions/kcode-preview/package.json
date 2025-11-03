@@ -30,12 +30,38 @@
       {
         "command": "kcode-preview.open",
         "title": "Open KCode Preview"
+      },
+      {
+        "command": "kcode-preview.deploy",
+        "title": "KCode Preview: Deploy Current Workspace"
+      },
+      {
+        "command": "kcode.netlify.saveToken",
+        "title": "KCode Preview: Save Netlify Token"
+      },
+      {
+        "command": "kcode.netlify.deploy",
+        "title": "KCode Preview: Deploy with Netlify"
+      },
+      {
+        "command": "kcode.vercel.deploy",
+        "title": "KCode Preview: Deploy with Vercel"
+      },
+      {
+        "command": "kcode.githubPages.deploy",
+        "title": "KCode Preview: Deploy to GitHub Pages"
       }
     ]
   },
   "activationEvents": [
     "onCommand:kcode-preview.open",
-    "onView:kcodePreviewView"
+    "onCommand:kcode-preview.deploy",
+    "onCommand:kcode.netlify.saveToken",
+    "onCommand:kcode.netlify.deploy",
+    "onCommand:kcode.vercel.deploy",
+    "onCommand:kcode.githubPages.deploy",
+    "onView:kcodePreviewView",
+    "onStartupFinished"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && webpack --mode production",

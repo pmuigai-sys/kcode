@@ -1,0 +1,17 @@
+{
+  "kcode.ai.ollamaModels": [
+    "codellama",
+    "llama3"
+  ],
+  "kcode.ai.defaultModel": "codellama",
+  "kcode.ai.embeddingCache": "${env:KCODE_DATA_DIR}/embeddings",
+  "kcode.preview.hotReload": true,
+  "kcode.preview.defaultFramework": "react",
+  "kcode.integrations.netlifyCliPath": "${env:HOME}/.netlify/bin/netlify",
+  "editor.formatOnSave": true,
+  "eslint.enable": true,
+  "files.exclude": {
+    "**/.kcode": true,
+    "**/.ollama": true
+  }
+}

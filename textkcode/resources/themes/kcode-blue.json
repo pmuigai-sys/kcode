@@ -1,0 +1,38 @@
+{
+  "name": "KCode Blue",
+  "type": "dark",
+  "colors": {
+    "editor.background": "#0f172a",
+    "editor.foreground": "#e2e8f0",
+    "activityBar.background": "#0b1120",
+    "sideBar.background": "#111827",
+    "titleBar.activeBackground": "#1d4ed8",
+    "titleBar.activeForeground": "#f8fafc"
+  },
+  "tokenColors": [
+    {
+      "scope": "comment",
+      "settings": {
+        "foreground": "#64748b"
+      }
+    },
+    {
+      "scope": ["string", "template literal"],
+      "settings": {
+        "foreground": "#22d3ee"
+      }
+    },
+    {
+      "scope": "keyword",
+      "settings": {
+        "foreground": "#38bdf8"
+      }
+    },
+    {
+      "scope": "function",
+      "settings": {
+        "foreground": "#facc15"
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "appId": "com.kcode.app",
+  "productName": "KCode",
+  "directories": {
+    "buildResources": "resources",
+    "output": "out"
+  },
+  "files": [
+    "dist/**/*",
+    "extensions/**/*",
+    "resources/**/*",
+    "product.json",
+    "package.json"
+  ],
+  "mac": {
+    "target": "dmg",
+    "category": "public.app-category.developer-tools"
+  },
+  "linux": {
+    "target": [
+      "AppImage",
+      "deb"
+    ],
+    "category": "Development"
+  },
+  "win": {
+    "target": "nsis"
+  }
+}

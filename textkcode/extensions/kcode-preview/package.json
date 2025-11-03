@@ -1,0 +1,47 @@
+{
+  "name": "kcode.kcode-preview",
+  "displayName": "KCode Preview",
+  "description": "Dockable WebContainers-powered preview pane with AI guidance",
+  "version": "0.1.0",
+  "publisher": "kcode",
+  "engines": {
+    "vscode": "^1.86.0"
+  },
+  "main": "dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "panel": [
+        {
+          "id": "kcode-preview-container",
+          "title": "Preview",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "kcode-preview-container": [
+        {
+          "id": "kcodePreviewView",
+          "name": "Web Preview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "kcode-preview.open",
+        "title": "Open KCode Preview"
+      }
+    ]
+  },
+  "activationEvents": [
+    "onCommand:kcode-preview.open",
+    "onView:kcodePreviewView"
+  ],
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev": "webpack --watch"
+  },
+  "dependencies": {
+    "@vscode/webview-ui-toolkit": "^2.4.0"
+  }
+}

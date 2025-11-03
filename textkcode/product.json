@@ -1,0 +1,31 @@
+{
+  "nameShort": "KCode",
+  "nameLong": "KCode IDE",
+  "applicationName": "KCode",
+  "dataFolderName": ".kcode",
+  "win32MutexName": "kcode",
+  "licenseFileName": "LICENSE.txt",
+  "extensionsGallery": {
+    "serviceUrl": "https://marketplace.visualstudio.com/_apis/public/gallery",
+    "cacheUrl": "https://kcode-offline/extensions",
+    "itemUrl": "https://marketplace.visualstudio.com/items",
+    "controlUrl": "https://kcode-offline/extensions/control",
+    "recommendationsUrl": "https://kcode-offline/extensions/recommendations"
+  },
+  "icon": "resources/kcode-icon.svg",
+  "welcomePage": "https://docs.kcode.local/welcome",
+  "reportIssueUrl": "https://docs.kcode.local/support",
+  "darwinBundleIdentifier": "com.kcode.app",
+  "linuxIconName": "kcode",
+  "win32AppId": "KCodeApp",
+  "win32AppUserModelId": "com.kcode.app.desktop",
+  "extensionRecommendations": [
+    "kcode.kcode-ai",
+    "kcode.kcode-preview",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode"
+  ],
+  "extensionAllowedBadgeProviders": [
+    "kcode"
+  ]
+}

@@ -11,10 +11,11 @@
   "author": "KCode Team",
   "license": "MIT",
   "scripts": {
-    "postinstall": "yarn compile:tailwind",
+    "postinstall": "yarn bootstrap:vscode && yarn compile:tailwind",
     "compile": "yarn run build:extensions && yarn run gulp compile && yarn run copy:kcode",
     "compile:modules": "tsc -p scripts/tsconfig.json",
     "compile:tailwind": "node scripts/build-tailwind.js",
+    "bootstrap:vscode": "node scripts/bootstrap-vscode.js",
     "build:extensions": "yarn --cwd extensions/kcode-ai build && yarn --cwd extensions/kcode-preview build",
     "copy:kcode": "node scripts/copy-kcode.js",
     "watch": "tsc -w -p scripts/tsconfig.json",

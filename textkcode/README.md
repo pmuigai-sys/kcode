@@ -46,10 +46,13 @@ textkcode/
 ```bash
 git clone https://github.com/kcode/kcode.git
 cd kcode/textkcode
+yarn bootstrap:vscode
 ./scripts/setup.sh
 ```
 
 The setup script will install dependencies, pull required Ollama models (`codellama`, `llama3`), and build Tailwind assets for the webviews.
+
+> **Why `bootstrap:vscode`?** The upstream VSCode source is fetched on demand to keep this repository lightweight and GitHub-download friendly. The command clones the official VSCode repo (depth 1) into `src/vs/`, initializes its submodules, and strips the embedded git metadata so the files live directly in the KCode workspace.
 
 ### 3. Build and Run
 

@@ -1,0 +1,43 @@
+[Application]
+Name=Kitana Builder
+Version=1.0.0
+Company=Offline Forge
+MainScript=index.php
+Icon=index.php
+EnableInternalWebServer=1
+WebServerPort=0
+DefaultDocument=index.php
+UseWebview2=1
+EnableCompression=1
+CompressionMethod=ZSTD
+EmbedAllAssets=1
+EnableSandbox=1
+
+[PHP]
+Version=8.1
+EnableOpcache=1
+Extensions=php_sqlite3.dll;php_curl.dll;php_zip.dll
+AllowUrlFopen=0
+AllowUrlInclude=0
+ExposePhp=0
+
+[Security]
+EncryptData=1
+EncryptSources=1
+EnableDebug=0
+
+[Files]
+Sources=textkitana-builder
+IncludeFold=textkitana-builder\assets
+IncludeFold=textkitana-builder\api
+IncludeFold=textkitana-builder\builder
+IncludeFold=textkitana-builder\includes
+IncludeFold=textkitana-builder\docs
+IncludeFile=textkitana-builder\config.php
+IncludeFile=textkitana-builder\install.php
+IncludeFile=textkitana-builder\.htaccess
+
+[Runtime]
+RunProgram=php.exe -S 127.0.0.1:0 -t .
+LaunchWait=3000
+CustomPostRun=ollama-launcher.bat

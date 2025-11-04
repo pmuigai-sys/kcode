@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Kitana Builder Offline Docs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+        body { margin: 0; padding: 2rem 1.5rem 4rem; max-width: 960px; margin-inline: auto; line-height: 1.7; }
+        header { text-align: center; margin-bottom: 2.5rem; }
+        h1 { letter-spacing: 0.12em; text-transform: uppercase; }
+        nav { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; margin-bottom: 2rem; }
+        nav a { padding: 0.5rem 1rem; border-radius: 999px; background: rgba(99,102,241,0.12); text-decoration: none; }
+        section { margin-bottom: 2.5rem; }
+        code { background: rgba(15,23,42,0.15); padding: 0.25rem 0.45rem; border-radius: 6px; }
+        pre { background: rgba(15,23,42,0.75); color: #e2e8f0; padding: 1rem; border-radius: 1rem; overflow-x: auto; }
+        details { background: rgba(99,102,241,0.08); border-radius: 1rem; padding: 1rem 1.5rem; margin-bottom: 1rem; }
+        details summary { cursor: pointer; font-weight: 600; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 0.75rem; border-bottom: 1px solid rgba(99,102,241,0.2); text-align: left; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Kitana Builder</h1>
+        <p>Offline AI-powered full-stack agentic IDE documentation.</p>
+    </header>
+
+    <nav>
+        <a href="#overview">Overview</a>
+        <a href="#setup">Setup</a>
+        <a href="#chat">Chat</a>
+        <a href="#builder">Builder</a>
+        <a href="#agents">Agents</a>
+        <a href="#scheduler">Scheduler</a>
+        <a href="#packaging">Packaging</a>
+        <a href="#faq">FAQ</a>
+    </nav>
+
+    <section id="overview">
+        <h2>1. Overview</h2>
+        <p>Kitana Builder merges a conversational IDE, offline AI generation powered by Ollama, and operational tooling for packaging full-stack applications into portable web or desktop distributions.</p>
+        <ul>
+            <li>Offline-first: no internet required beyond Ollama model setup.</li>
+            <li>Agentic workflows: autonomy slider, scheduled tasks, and policy enforcement.</li>
+            <li>Packaging pipeline: ExeOutput for PHP 2025.0 configuration baked in.</li>
+        </ul>
+    </section>
+
+    <section id="setup">
+        <h2>2. Initial Setup</h2>
+        <ol>
+            <li>Install PHP 8.1+, SQLite support, and enable <code>exec()</code>.</li>
+            <li>Install Ollama and pull required models: <code>ollama pull codellama</code> and <code>ollama pull llama3.2</code>.</li>
+            <li>Serve the project directory via Apache/Nginx or <code>php -S localhost:8000</code>.</li>
+            <li>Visit <code>/install.php</code> to create the SQLite database and verify Ollama.</li>
+        </ol>
+        <details>
+            <summary>Ollama service tips</summary>
+            <ul>
+                <li>Run <code>ollama serve</code> prior to launching Kitana Builder.</li>
+                <li>Check available models via Settings → Ollama Status.</li>
+                <li>Use Manage Models to pull or remove models directly.</li>
+            </ul>
+        </details>
+    </section>
+
+    <section id="chat">
+        <h2>3. Conversational IDE</h2>
+        <p>The chat surface handles ideation, documentation, and rapid iteration.</p>
+        <table>
+            <thead>
+                <tr><th>Feature</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Modes</td><td>General, Builder, Agentic — adjust prompt bias and autonomy.</td></tr>
+                <tr><td>Personality</td><td>Neutral or Grok-witty tone, set per conversation.</td></tr>
+                <tr><td>Voice</td><td>Web Speech API for dictation and speech synthesis.</td></tr>
+                <tr><td>Memory</td><td>SQLite-backed summaries, pinned messages, quick search.</td></tr>
+                <tr><td>Exports</td><td>Generate TXT/Markdown/PDF transcripts offline.</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section id="builder">
+        <h2>4. Builder Workspace</h2>
+        <p>Manage full-stack projects, edit code, preview frontends, and execute local tests.</p>
+        <ul>
+            <li>Project explorer mapped to <code>/projects/</code> directory.</li>
+            <li>Inline diff-friendly generation via <code>api/generate-code.php</code>.</li>
+            <li>Offline Monaco-like editor with voice controls and AI autocomplete.</li>
+            <li>Preview sandbox (iframe) and PHP execution output.</li>
+            <li>MinGit snapshots for localStorage-based checkpoints.</li>
+        </ul>
+        <pre><code>// Example generation prompt
+"Build a Flask todo app with SQLite and Tailwind"</code></pre>
+    </section>
+
+    <section id="agents">
+        <h2>5. Autonomous Agents</h2>
+        <p>Use Agent Mode to chain tasks.</p>
+        <ol>
+            <li>Set Autonomy slider (0 suggestions → 2 full execution).</li>
+            <li>Provide a goal such as "Generate unit tests and run phpunit".</li>
+            <li>Review planned actions and apply them manually or via scripts.</li>
+        </ol>
+    </section>
+
+    <section id="scheduler">
+        <h2>6. Scheduler & Tasks</h2>
+        <p>Create cron-like reminders stored in SQLite and surfaced in the calendar view. Ideal for backups, nightly builds, or recurring QA scripts. Tasks integrate with PHP daemons or OS-level schedulers.</p>
+    </section>
+
+    <section id="packaging">
+        <h2>7. Packaging to Windows .exe</h2>
+        <ol>
+            <li>Install ExeOutput for PHP 2025.0 (WebView2 engine enabled).</li>
+            <li>Run <code>build.php</code> to refresh the project file inside <code>/package/kitana-project.php2exe</code>.</li>
+            <li>Open ExeOutput → load the generated project → confirm encryption & ZSTD compression.</li>
+            <li>Compile to produce <code>kitana-builder.exe</code> (~20–50 MB).</li>
+            <li>Bundle <code>ollama-launcher.bat</code> to start Ollama alongside the app.</li>
+        </ol>
+        <details>
+            <summary>Offline distribution tips</summary>
+            <ul>
+                <li>Embed pulled Ollama models on the target machine before launch.</li>
+                <li>Use <code>package/exebuild.ini</code> to configure icons and splash screens.</li>
+                <li>Post-build hook compresses templates and verifies database integrity.</li>
+            </ul>
+        </details>
+    </section>
+
+    <section id="faq">
+        <h2>8. FAQ</h2>
+        <details>
+            <summary>How do I add new templates?</summary>
+            <p>Place scaffolds in <code>/projects/templates</code> (create folder) and reference via chat prompts or the project creation modal.</p>
+        </details>
+        <details>
+            <summary>How is security handled?</summary>
+            <p>All inputs sanitized via <code>includes/functions.php</code>, CSRF + rate limiting via <code>includes/security.php</code>. Security scans accessible under Settings → Security Tools.</p>
+        </details>
+        <details>
+            <summary>Can I extend Kitana Builder?</summary>
+            <p>Yes. Add PHP APIs inside <code>/api/</code>, register in <code>assets/js/main.js</code>, and expose via the UI. Plugins can wrap CLI tools or custom Ollama prompts.</p>
+        </details>
+    </section>
+
+    <footer>
+        <p>Kitana Builder © <?= date('Y') ?>. Offline-ready engineering companion.</p>
+    </footer>
+</body>
+</html>

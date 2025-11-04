@@ -1,0 +1,37 @@
+[data-theme="high-contrast"] body {
+  background: #000;
+  color: #fff;
+}
+
+[data-theme="high-contrast"] .kb-header,
+[data-theme="high-contrast"] .kb-sidebar,
+[data-theme="high-contrast"] .kb-panel,
+[data-theme="high-contrast"] .kb-chat,
+[data-theme="high-contrast"] .kb-projects,
+[data-theme="high-contrast"] .kb-editor,
+[data-theme="high-contrast"] .kb-preview,
+[data-theme="high-contrast"] .kb-settings section {
+  border: 2px solid #fff;
+  box-shadow: none;
+  background: #000;
+}
+
+[data-theme="high-contrast"] a,
+[data-theme="high-contrast"] button,
+[data-theme="high-contrast"] input,
+[data-theme="high-contrast"] textarea,
+[data-theme="high-contrast"] select {
+  color: #fff !important;
+  background: #000 !important;
+  border-color: #fff !important;
+}
+
+[data-theme="high-contrast"] .kb-button.primary {
+  background: #fff !important;
+  color: #000 !important;
+  border-color: #fff !important;
+}
+
+[data-theme="high-contrast"] .kb-console {
+  color: #0f0;
+}

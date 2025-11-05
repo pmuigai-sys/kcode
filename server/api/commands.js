@@ -1,6 +1,6 @@
 import express from "express";
 
-import db from "../db/index.js";
+import { get, run } from "../db/index.js";
 import { runCommand } from "../utils/exec.js";
 import { recordActivity } from "../utils/activity.js";
 
@@ -14,7 +14,7 @@ router.post("/:projectId/commands/run", async (req, res) => {
     return res.status(400).json({ error: "command is required" });
   }
 
-  const project = db.prepare(`SELECT id FROM projects WHERE id = ?`).get(projectId);
+  const project = await get(`SELECT id FROM projects WHERE id = ?`, [projectId]);
   if (!project) {
     return res.status(404).json({ error: "Project not found" });
   }
@@ -30,13 +30,13 @@ router.post("/:projectId/commands/run", async (req, res) => {
       onStderr: (line) => output.push({ type: "stderr", line })
     });
 
-    db.prepare(`UPDATE projects SET last_run_at = ?, last_command = ? WHERE id = ?`).run(
+    await run(`UPDATE projects SET last_run_at = ?, last_command = ? WHERE id = ?`, [
       new Date().toISOString(),
       `${command} ${args.join(" ")}`.trim(),
       projectId
-    );
+    ]);
 
-    recordActivity({
+    await recordActivity({
       projectId,
       type: "command_run",
       detail: JSON.stringify({ command, args })

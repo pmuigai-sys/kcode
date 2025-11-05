@@ -1,7 +1,7 @@
 import express from "express";
 import { randomUUID } from "node:crypto";
 
-import db from "../db/index.js";
+import { all, get, run } from "../db/index.js";
 import { chatCompletion } from "../utils/ollama.js";
 import { getModelConfig } from "../utils/settings.js";
 import { SYSTEM_PROMPT, applyAgentActions, parseAgentResponse } from "../utils/agent.js";
@@ -26,56 +26,62 @@ const mapMessage = (row) => ({
   metadata: row.metadata ? JSON.parse(row.metadata) : null
 });
 
-router.get("/projects/:projectId/chat-sessions", (req, res) => {
-  const sessions = db
-    .prepare(
+router.get("/projects/:projectId/chat-sessions", async (req, res) => {
+  try {
+    const sessions = await all(
       `SELECT id, project_id, title, created_at, updated_at
        FROM chat_sessions
        WHERE project_id = ?
-       ORDER BY updated_at DESC`
-    )
-    .all(req.params.projectId);
+       ORDER BY updated_at DESC`,
+      [req.params.projectId]
+    );
 
-  res.json(sessions.map(mapChatSession));
-});
-
-router.post("/projects/:projectId/chat-sessions", (req, res) => {
-  const { projectId } = req.params;
-  const project = db.prepare(`SELECT id FROM projects WHERE id = ?`).get(projectId);
-  if (!project) {
-    return res.status(404).json({ error: "Project not found" });
+    res.json(sessions.map(mapChatSession));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-
-  const id = randomUUID();
-  const now = new Date().toISOString();
-  const title = req.body.title?.trim() || "New Session";
-
-  db.prepare(
-    `INSERT INTO chat_sessions (id, project_id, title, created_at, updated_at)
-     VALUES (@id, @project_id, @title, @created_at, @updated_at)`
-  ).run({
-    id,
-    project_id: projectId,
-    title,
-    created_at: now,
-    updated_at: now
-  });
-
-  res.status(201).json({ id, projectId, title, createdAt: now, updatedAt: now });
 });
 
-router.get("/chat-sessions/:chatId/messages", (req, res) => {
+router.post("/projects/:projectId/chat-sessions", async (req, res) => {
+  const { projectId } = req.params;
+
+  try {
+    const project = await get(`SELECT id FROM projects WHERE id = ?`, [projectId]);
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    const id = randomUUID();
+    const now = new Date().toISOString();
+    const title = req.body.title?.trim() || "New Session";
+
+    await run(
+      `INSERT INTO chat_sessions (id, project_id, title, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?)`,
+      [id, projectId, title, now, now]
+    );
+
+    res.status(201).json({ id, projectId, title, createdAt: now, updatedAt: now });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get("/chat-sessions/:chatId/messages", async (req, res) => {
   const { chatId } = req.params;
-  const messages = db
-    .prepare(
+  try {
+    const messages = await all(
       `SELECT id, chat_id, role, content, metadata, created_at
        FROM chat_messages
        WHERE chat_id = ?
-       ORDER BY created_at ASC`
-    )
-    .all(chatId);
+       ORDER BY created_at ASC`,
+      [chatId]
+    );
 
-  res.json(messages.map(mapMessage));
+    res.json(messages.map(mapMessage));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 router.post("/chat-sessions/:chatId/messages", async (req, res) => {
@@ -86,14 +92,13 @@ router.post("/chat-sessions/:chatId/messages", async (req, res) => {
     return res.status(400).json({ error: "Message content is required" });
   }
 
-  const chat = db
-    .prepare(
-      `SELECT cs.id, cs.project_id, cs.title, p.name as project_name
+  const chat = await get(
+    `SELECT cs.id, cs.project_id, cs.title, p.name as project_name
        FROM chat_sessions cs
        JOIN projects p ON p.id = cs.project_id
-       WHERE cs.id = ?`
-    )
-    .get(chatId);
+       WHERE cs.id = ?`,
+    [chatId]
+  );
 
   if (!chat) {
     return res.status(404).json({ error: "Chat session not found" });
@@ -102,26 +107,21 @@ router.post("/chat-sessions/:chatId/messages", async (req, res) => {
   const now = new Date().toISOString();
   const userMessageId = randomUUID();
 
-  db.prepare(
+  await run(
     `INSERT INTO chat_messages (id, chat_id, role, content, metadata, created_at)
-     VALUES (@id, @chat_id, 'user', @content, NULL, @created_at)`
-  ).run({
-    id: userMessageId,
-    chat_id: chatId,
-    content,
-    created_at: now
-  });
+     VALUES (?, ?, 'user', ?, NULL, ?)`,
+    [userMessageId, chatId, content, now]
+  );
 
   try {
-    const history = db
-      .prepare(
-        `SELECT role, content
+    const history = await all(
+      `SELECT role, content
          FROM chat_messages
          WHERE chat_id = ?
          ORDER BY created_at ASC
-         LIMIT 50`
-      )
-      .all(chatId);
+         LIMIT 50`,
+      [chatId]
+    );
 
     const messages = [
       { role: "system", content: SYSTEM_PROMPT },
@@ -131,7 +131,7 @@ router.post("/chat-sessions/:chatId/messages", async (req, res) => {
       }))
     ];
 
-    const config = getModelConfig();
+    const config = await getModelConfig();
     const model = mode === "chat" ? config.defaultChatModel : config.defaultCodeModel;
 
     const aiRaw = await chatCompletion({
@@ -157,23 +157,24 @@ router.post("/chat-sessions/:chatId/messages", async (req, res) => {
       fileResults
     };
 
-    db.prepare(
+    await run(
       `INSERT INTO chat_messages (id, chat_id, role, content, metadata, created_at)
-       VALUES (@id, @chat_id, 'assistant', @content, @metadata, @created_at)`
-    ).run({
-      id: assistantMessageId,
-      chat_id: chatId,
-      content: parsed.reply,
-      metadata: JSON.stringify(metadata),
-      created_at: new Date().toISOString()
-    });
-
-    db.prepare(`UPDATE chat_sessions SET updated_at = ? WHERE id = ?`).run(
-      new Date().toISOString(),
-      chatId
+       VALUES (?, ?, 'assistant', ?, ?, ?)`,
+      [
+        assistantMessageId,
+        chatId,
+        parsed.reply,
+        JSON.stringify(metadata),
+        new Date().toISOString()
+      ]
     );
 
-    recordActivity({
+    await run(`UPDATE chat_sessions SET updated_at = ? WHERE id = ?`, [
+      new Date().toISOString(),
+      chatId
+    ]);
+
+    await recordActivity({
       projectId: chat.project_id,
       type: "agent_reply",
       detail: JSON.stringify({ reply: parsed.reply, fileResults })

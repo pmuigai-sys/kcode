@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { rmSync } from "node:fs";
 import { join } from "node:path";
 
-import db from "../db/index.js";
+import { all, get, run } from "../db/index.js";
 import {
   createDirectory,
   detectLanguage,
@@ -32,149 +32,163 @@ const mapProject = (row) => ({
   updatedAt: row.updated_at
 });
 
-router.get("/", (_req, res) => {
-  const rows = db
-    .prepare(
+router.get("/", async (_req, res) => {
+  try {
+    const rows = await all(
       `SELECT id, name, description, framework, runtime, model, status, last_run_at, last_command, created_at, updated_at
        FROM projects ORDER BY updated_at DESC`
-    )
-    .all();
-
-  res.json(rows.map(mapProject));
+    );
+    res.json(rows.map(mapProject));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
-router.post("/", (req, res) => {
-  const id = randomUUID();
-  const now = new Date().toISOString();
-  const { name, description = null, framework, runtime, model } = req.body;
+router.post("/", async (req, res) => {
+  try {
+    const id = randomUUID();
+    const now = new Date().toISOString();
+    const { name, description = null, framework, runtime, model } = req.body;
 
-  if (!name || !framework || !runtime || !model) {
-    return res.status(400).json({ error: "Missing required fields" });
-  }
-
-  db.prepare(
-    `INSERT INTO projects (id, name, description, framework, runtime, model, status, created_at, updated_at)
-     VALUES (@id, @name, @description, @framework, @runtime, @model, 'draft', @created_at, @updated_at)`
-  ).run({
-    id,
-    name,
-    description,
-    framework,
-    runtime,
-    model,
-    created_at: now,
-    updated_at: now
-  });
-
-  getProjectRoot(id);
-
-  const chatId = randomUUID();
-  db.prepare(
-    `INSERT INTO chat_sessions (id, project_id, title, created_at, updated_at)
-     VALUES (@id, @project_id, @title, @created_at, @updated_at)`
-  ).run({
-    id: chatId,
-    project_id: id,
-    title: "Main Chat",
-    created_at: now,
-    updated_at: now
-  });
-
-  recordActivity({
-    projectId: id,
-    type: "project_created",
-    detail: JSON.stringify({ name, framework, runtime })
-  });
-
-  res.status(201).json(mapProject({
-    id,
-    name,
-    description,
-    framework,
-    runtime,
-    model,
-    status: "draft",
-    last_run_at: null,
-    last_command: null,
-    created_at: now,
-    updated_at: now
-  }));
-});
-
-router.get("/:projectId", (req, res) => {
-  const project = db
-    .prepare(
-      `SELECT id, name, description, framework, runtime, model, status, last_run_at, last_command, created_at, updated_at
-       FROM projects WHERE id = ?`
-    )
-    .get(req.params.projectId);
-
-  if (!project) {
-    return res.status(404).json({ error: "Project not found" });
-  }
-
-  res.json(mapProject(project));
-});
-
-router.put("/:projectId", (req, res) => {
-  const { projectId } = req.params;
-  const project = db
-    .prepare(`SELECT id FROM projects WHERE id = ?`)
-    .get(projectId);
-
-  if (!project) {
-    return res.status(404).json({ error: "Project not found" });
-  }
-
-  const fields = ["name", "description", "framework", "runtime", "model", "status", "last_run_at", "last_command"];
-  const updates = [];
-  const params = { id: projectId };
-
-  fields.forEach((field) => {
-    if (field in req.body) {
-      updates.push(`${field} = @${field}`);
-      params[field] = req.body[field];
+    if (!name || !framework || !runtime || !model) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
-  });
 
-  if (!updates.length) {
-    return res.status(400).json({ error: "No updatable fields provided" });
+    await run(
+      `INSERT INTO projects (id, name, description, framework, runtime, model, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, ?)`,
+      [id, name, description, framework, runtime, model, now, now]
+    );
+
+    getProjectRoot(id);
+
+    const chatId = randomUUID();
+    await run(
+      `INSERT INTO chat_sessions (id, project_id, title, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?)`,
+      [chatId, id, "Main Chat", now, now]
+    );
+
+    await recordActivity({
+      projectId: id,
+      type: "project_created",
+      detail: JSON.stringify({ name, framework, runtime })
+    });
+
+    res.status(201).json(
+      mapProject({
+        id,
+        name,
+        description,
+        framework,
+        runtime,
+        model,
+        status: "draft",
+        last_run_at: null,
+        last_command: null,
+        created_at: now,
+        updated_at: now
+      })
+    );
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-
-  updates.push("updated_at = @updated_at");
-  params.updated_at = new Date().toISOString();
-
-  db.prepare(`UPDATE projects SET ${updates.join(", ")} WHERE id = @id`).run(params);
-
-  const updated = db
-    .prepare(
-      `SELECT id, name, description, framework, runtime, model, status, last_run_at, last_command, created_at, updated_at
-       FROM projects WHERE id = ?`
-    )
-    .get(projectId);
-
-  res.json(mapProject(updated));
 });
 
-router.delete("/:projectId", (req, res) => {
-  const { projectId } = req.params;
-  const project = db.prepare(`SELECT id FROM projects WHERE id = ?`).get(projectId);
-  if (!project) {
-    return res.status(404).json({ error: "Project not found" });
+router.get("/:projectId", async (req, res) => {
+  try {
+    const project = await get(
+      `SELECT id, name, description, framework, runtime, model, status, last_run_at, last_command, created_at, updated_at
+       FROM projects WHERE id = ?`,
+      [req.params.projectId]
+    );
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    res.json(mapProject(project));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
+});
 
-  db.prepare(`DELETE FROM projects WHERE id = ?`).run(projectId);
+router.put("/:projectId", async (req, res) => {
+  const { projectId } = req.params;
 
-  const projectPath = join(projectsDir, projectId);
-  rmSync(projectPath, { recursive: true, force: true });
+  try {
+    const project = await get(`SELECT id FROM projects WHERE id = ?`, [projectId]);
 
-  recordActivity({
-    projectId,
-    type: "project_deleted",
-    detail: JSON.stringify({ projectId })
-  });
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
 
-  res.json({ status: "ok" });
+    const fields = [
+      "name",
+      "description",
+      "framework",
+      "runtime",
+      "model",
+      "status",
+      "last_run_at",
+      "last_command"
+    ];
+    const updates = [];
+    const params = [];
+
+    fields.forEach((field) => {
+      if (field in req.body) {
+        updates.push(`${field} = ?`);
+        params.push(req.body[field]);
+      }
+    });
+
+    if (!updates.length) {
+      return res.status(400).json({ error: "No updatable fields provided" });
+    }
+
+    updates.push("updated_at = ?");
+    params.push(new Date().toISOString());
+    params.push(projectId);
+
+    await run(`UPDATE projects SET ${updates.join(", ")} WHERE id = ?`, params);
+
+    const updated = await get(
+      `SELECT id, name, description, framework, runtime, model, status, last_run_at, last_command, created_at, updated_at
+       FROM projects WHERE id = ?`,
+      [projectId]
+    );
+
+    res.json(mapProject(updated));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.delete("/:projectId", async (req, res) => {
+  const { projectId } = req.params;
+
+  try {
+    const project = await get(`SELECT id FROM projects WHERE id = ?`, [projectId]);
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    await run(`DELETE FROM projects WHERE id = ?`, [projectId]);
+
+    const projectPath = join(projectsDir, projectId);
+    rmSync(projectPath, { recursive: true, force: true });
+
+    await recordActivity({
+      projectId,
+      type: "project_deleted",
+      detail: JSON.stringify({ projectId })
+    });
+
+    res.json({ status: "ok" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 router.get("/:projectId/files", (req, res) => {
@@ -206,16 +220,16 @@ router.get("/:projectId/files/content", (req, res) => {
   }
 });
 
-router.get("/:projectId/activities", (req, res) => {
+router.get("/:projectId/activities", async (req, res) => {
   try {
-    const activities = listActivities(req.params.projectId, 25);
+    const activities = await listActivities(req.params.projectId, 25);
     res.json(activities);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-router.post("/:projectId/files", (req, res) => {
+router.post("/:projectId/files", async (req, res) => {
   const { projectId } = req.params;
   const { path, content = "", type = "file" } = req.body;
 
@@ -226,7 +240,7 @@ router.post("/:projectId/files", (req, res) => {
   try {
     if (type === "directory") {
       createDirectory(projectId, path);
-      recordActivity({
+      await recordActivity({
         projectId,
         type: "directory_created",
         detail: JSON.stringify({ path })
@@ -240,7 +254,7 @@ router.post("/:projectId/files", (req, res) => {
     }
 
     writeProjectFile(projectId, path, content);
-    recordActivity({
+    await recordActivity({
       projectId,
       type: "file_saved",
       detail: JSON.stringify({ path })
@@ -256,7 +270,7 @@ router.post("/:projectId/files", (req, res) => {
   }
 });
 
-router.delete("/:projectId/files", (req, res) => {
+router.delete("/:projectId/files", async (req, res) => {
   const { projectId } = req.params;
   const { path } = req.body;
   if (!path) {
@@ -265,7 +279,7 @@ router.delete("/:projectId/files", (req, res) => {
 
   try {
     deleteProjectPath(projectId, path);
-    recordActivity({
+    await recordActivity({
       projectId,
       type: "path_deleted",
       detail: JSON.stringify({ path })

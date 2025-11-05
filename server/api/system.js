@@ -6,7 +6,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { performance } from "node:perf_hooks";
 
-import db from "../db/index.js";
+import { get } from "../db/index.js";
 import { listOllamaModels } from "../utils/ollama.js";
 import { getModelConfig, setModelConfig } from "../utils/settings.js";
 import { projectsDir, rootDir } from "../utils/paths.js";
@@ -29,7 +29,7 @@ router.get("/status", async (_req, res) => {
 
   try {
     const start = performance.now();
-    db.prepare("SELECT 1").get();
+    await get("SELECT 1");
     databaseStatus = {
       status: "online",
       message: "Connected",
@@ -83,14 +83,14 @@ router.get("/models", async (_req, res) => {
   }
 });
 
-router.get("/models/config", (_req, res) => {
-  const config = getModelConfig();
+router.get("/models/config", async (_req, res) => {
+  const config = await getModelConfig();
   res.json(config);
 });
 
-router.put("/models/config", (req, res) => {
+router.put("/models/config", async (req, res) => {
   const config = req.body;
-  setModelConfig(config);
+  await setModelConfig(config);
   res.json(config);
 });
 

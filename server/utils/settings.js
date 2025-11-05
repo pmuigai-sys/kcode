@@ -1,7 +1,7 @@
-import db from "../db/index.js";
+import { get, run } from "../db/index.js";
 
-export const getSetting = (key, fallback = null) => {
-  const row = db.prepare("SELECT value FROM settings WHERE key = ?").get(key);
+export const getSetting = async (key, fallback = null) => {
+  const row = await get("SELECT value FROM settings WHERE key = ?", [key]);
   if (!row) return fallback;
   try {
     return JSON.parse(row.value);
@@ -10,17 +10,18 @@ export const getSetting = (key, fallback = null) => {
   }
 };
 
-export const setSetting = (key, value) => {
+export const setSetting = async (key, value) => {
   const payload = typeof value === "string" ? value : JSON.stringify(value);
-  db.prepare(
-    `INSERT INTO settings (key, value) VALUES (@key, @value)
-     ON CONFLICT(key) DO UPDATE SET value = excluded.value`
-  ).run({ key, value: payload });
+  await run(
+    `INSERT INTO settings (key, value) VALUES (?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+    [key, payload]
+  );
 };
 
 const MODEL_CONFIG_KEY = "model-config";
 
-export const getModelConfig = () =>
+export const getModelConfig = async () =>
   getSetting(MODEL_CONFIG_KEY, {
     defaultChatModel: "llama3.2",
     defaultCodeModel: "codellama",
@@ -28,4 +29,4 @@ export const getModelConfig = () =>
     maxTokens: 4096
   });
 
-export const setModelConfig = (config) => setSetting(MODEL_CONFIG_KEY, config);
+export const setModelConfig = async (config) => setSetting(MODEL_CONFIG_KEY, config);
